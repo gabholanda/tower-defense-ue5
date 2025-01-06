@@ -24,6 +24,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FVector> Destinations;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float Radius = 1.0f;
+
 private:
 	uint8 Index = 0;
 

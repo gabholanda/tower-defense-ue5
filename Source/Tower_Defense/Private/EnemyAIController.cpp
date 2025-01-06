@@ -31,7 +31,7 @@ void AEnemyAIController::OnLocationReached(FAIRequestID RequestID, EPathFollowin
 		Index++;
 		if (Index < Destinations.Num())
 		{
-			MoveToLocation(Destinations[Index], 1.0f);
+			MoveToLocation(Destinations[Index], Radius);
 			return;
 		}
 	}
