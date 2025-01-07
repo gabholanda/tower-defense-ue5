@@ -1,13 +1,16 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Tower_DefenseCharacter.h"
-#include "Tower_DefenseProjectile.h"
+
+#include "AbilityInputID.h"
+#include "AbilitySystemComponent.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "FireballAbility.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-
+#include "Tower_DefenseProjectile.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ATower_DefenseCharacter
@@ -16,10 +19,11 @@ ATower_DefenseCharacter::ATower_DefenseCharacter()
 {
 	// Character doesnt have a rifle at start
 	bHasRifle = false;
-	
+
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
+
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
-		
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
@@ -37,6 +41,11 @@ ATower_DefenseCharacter::ATower_DefenseCharacter()
 
 }
 
+UAbilitySystemComponent* ATower_DefenseCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
 void ATower_DefenseCharacter::BeginPlay()
 {
 	// Call the base class  
@@ -51,12 +60,29 @@ void ATower_DefenseCharacter::BeginPlay()
 		}
 	}
 
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(FireballAbility, 1, static_cast<int32>(EAbilityInputID::Fireball), this));
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
 
 void ATower_DefenseCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->BindAbilityActivationToInputComponent(
+			PlayerInputComponent,
+			FGameplayAbilityInputBinds(
+				"Confirm",
+				"Cancel",
+				"EAbilityInputID",
+				static_cast<int32>(EAbilityInputID::Confirm),
+				static_cast<int32>(EAbilityInputID::Cancel)
+			)
+		);
+	}
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
@@ -69,6 +95,8 @@ void ATower_DefenseCharacter::SetupPlayerInputComponent(class UInputComponent* P
 
 		//Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATower_DefenseCharacter::Look);
+
+		EnhancedInputComponent->BindAction(FireballAction, ETriggerEvent::Triggered, this, &ATower_DefenseCharacter::HandleFireballInput);
 	}
 }
 
@@ -96,6 +124,14 @@ void ATower_DefenseCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void ATower_DefenseCharacter::HandleFireballInput(const FInputActionValue& Value)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->TryActivateAbilityByClass(FireballAbility);
 	}
 }
 
