@@ -1,8 +1,18 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "FireTowerActor.h"
 
-void AFireTowerActor::PerformInteraction_Implementation(AActor* Target)
+#include "AbilityInputID.h"
+#include "AbilitySystemComponent.h"
+#include "TowerDataAsset.h"
+
+void AFireTowerActor::BeginPlay()
 {
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(FireballAbility, 1, static_cast<int32>(EAbilityInputID::TowerFireball), this));
+	}
+
+	if (TowerData)
+	{
+		SetCost(TowerData->Cost);
+	}
 }

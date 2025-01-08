@@ -8,9 +8,16 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "FireballAbility.h"
+#include "FireTowerActor.h"
+#include "LightningTower.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "TowerResourceManager.h"
+#include "TowerPlaceableComponent.h"
 #include "Tower_DefenseProjectile.h"
+#include <Kismet/GameplayStatics.h>
+#include <Tower_Defense/Tower_DefenseGameMode.h>
+#include "TowerDataAsset.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ATower_DefenseCharacter
@@ -63,6 +70,7 @@ void ATower_DefenseCharacter::BeginPlay()
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(FireballAbility, 1, static_cast<int32>(EAbilityInputID::Fireball), this));
+		AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(LightningStrikeAbility, 1, static_cast<int32>(EAbilityInputID::LightningStrike), this));
 	}
 }
 
@@ -97,6 +105,12 @@ void ATower_DefenseCharacter::SetupPlayerInputComponent(class UInputComponent* P
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATower_DefenseCharacter::Look);
 
 		EnhancedInputComponent->BindAction(FireballAction, ETriggerEvent::Triggered, this, &ATower_DefenseCharacter::HandleFireballInput);
+		EnhancedInputComponent->BindAction(LightningStrikeAction, ETriggerEvent::Triggered, this, &ATower_DefenseCharacter::HandleLightningStrikeInput);
+
+		EnhancedInputComponent->BindAction(PickFireTowerAction, ETriggerEvent::Triggered, this, &ATower_DefenseCharacter::PickFireTower);
+		EnhancedInputComponent->BindAction(PickLightningTowerAction, ETriggerEvent::Triggered, this, &ATower_DefenseCharacter::PickLightningTower);
+		EnhancedInputComponent->BindAction(BuildPickedTowerAction, ETriggerEvent::Triggered, this, &ATower_DefenseCharacter::BuildPickedTower);
+		EnhancedInputComponent->BindAction(CancelTowerPickAction, ETriggerEvent::Triggered, this, &ATower_DefenseCharacter::CancelTowerPick);
 	}
 }
 
@@ -125,6 +139,82 @@ void ATower_DefenseCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+
+	if (PickedTowerClass)
+	{
+		FHitResult HitResult;
+		FVector Start = FirstPersonCameraComponent->GetComponentLocation();
+		FVector End = Start + (FirstPersonCameraComponent->GetForwardVector() * TraceDistance);
+
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility))
+		{
+			AActor* HitActor = HitResult.GetActor();
+			if (HitActor)
+			{
+				if (UMeshComponent* MeshComponent = HitActor->GetComponentByClass<UMeshComponent>())
+				{
+					if (UTowerPlaceableComponent* TowerPlaceableComponent = HitActor->GetComponentByClass<UTowerPlaceableComponent>())
+					{
+						PlaceableComponent = TowerPlaceableComponent;
+
+						if (PlaceableComponent->HasPlacedTower())
+						{
+							MeshComponent->SetMaterial(0, BlockPlacementMaterial);
+						}
+						else
+						{
+							MeshComponent->SetMaterial(0, AllowPlacementMaterial);
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void ATower_DefenseCharacter::PickFireTower(const FInputActionValue& Value)
+{
+	PickedTowerClass = FireTower;
+	TowerCost = FireTowerData->Cost;
+}
+
+void ATower_DefenseCharacter::PickLightningTower(const FInputActionValue& Value)
+{
+	PickedTowerClass = LightningTower;
+	TowerCost = LightningTowerData->Cost;
+}
+
+void ATower_DefenseCharacter::CancelTowerPick(const FInputActionValue& Value)
+{
+	PickedTowerClass = nullptr;
+	TowerCost = 0;
+}
+
+void ATower_DefenseCharacter::BuildPickedTower(const FInputActionValue& Value)
+{
+	if (!PickedTowerClass)
+	{
+		return;
+	}
+
+	if (!PlaceableComponent || PlaceableComponent->HasPlacedTower())
+	{
+		return;
+	}
+
+	ATower_DefenseGameMode* GameMode = Cast<ATower_DefenseGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameMode)
+	{
+		if (UTowerResourceManager* ResourceManager = GameMode->GetResourceManager())
+		{
+			if (!ResourceManager->SpendResources(TowerCost))
+			{
+				return;
+			}
+		}
+	}
+
+	PlaceableComponent->OnBuildTower(PickedTowerClass);
 }
 
 void ATower_DefenseCharacter::HandleFireballInput(const FInputActionValue& Value)
@@ -132,6 +222,14 @@ void ATower_DefenseCharacter::HandleFireballInput(const FInputActionValue& Value
 	if (AbilitySystemComponent)
 	{
 		AbilitySystemComponent->TryActivateAbilityByClass(FireballAbility);
+	}
+}
+
+void ATower_DefenseCharacter::HandleLightningStrikeInput(const FInputActionValue& Value)
+{
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->TryActivateAbilityByClass(LightningStrikeAbility);
 	}
 }
 

@@ -11,13 +11,22 @@ ATower_DefenseGameMode::ATower_DefenseGameMode()
 	// set default pawn class to our Blueprinted character
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnClassFinder(TEXT("/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"));
 	DefaultPawnClass = PlayerPawnClassFinder.Class;
-	
+
 	ResourceManager = NewObject<UTowerResourceManager>();
-	ResourceManager->Initialize(InitialResourcesAmount); // Starting with 100 resources
+	ResourceManager->Initialize(InitialResourcesAmount);
+	ResourceManager->AddToRoot();
+}
+
+UTowerResourceManager* ATower_DefenseGameMode::GetResourceManager()
+{
+	return ResourceManager.Get();
 }
 
 void ATower_DefenseGameMode::BeginPlay()
 {
+	ResourceManager = NewObject<UTowerResourceManager>();
+	ResourceManager->Initialize(InitialResourcesAmount);
+	ResourceManager->AddToRoot();
 	StartWave(CurrentWaveIndex);
 }
 

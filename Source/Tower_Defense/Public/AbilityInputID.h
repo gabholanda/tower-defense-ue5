@@ -10,4 +10,7 @@ enum class EAbilityInputID : uint8
     Confirm UMETA(DisplayName = "Confirm"),  
     Cancel UMETA(DisplayName = "Cancel"),
     Fireball UMETA(DisplayName = "Fireball"),
+    TowerFireball UMETA(DisplayName = "TowerFireball"),
+    LightningStrike UMETA(DisplayName = "LightningStrike"),
+    TowerLightningStrike UMETA(DisplayName = "TowerLightningStrike"),
 };

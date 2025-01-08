@@ -23,7 +23,4 @@ public:
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ability")
 	TSubclassOf<AActor> FireballClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ability")
-	UAnimMontage* FireballMontage;
 };

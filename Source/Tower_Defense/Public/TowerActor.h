@@ -2,12 +2,16 @@
 
 #pragma once
 
+#include "AbilitySystemInterface.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "TowerActor.generated.h"
 
+class UAbilitySystemComponent;
+class UTowerDataAsset;
+
 UCLASS(Abstract)
-class TOWER_DEFENSE_API ATowerActor : public AActor
+class TOWER_DEFENSE_API ATowerActor : public AActor, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -15,19 +19,25 @@ public:
 	// Sets default values for this actor's properties
 	ATowerActor();
 
+    // Implement IAbilitySystemInterface
+    virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 public:
     UFUNCTION(BlueprintGetter)
-    int32 GetResourceAmount() const;
+    int32 GetCost() const;
 
     UFUNCTION(BlueprintSetter)
-    void SetResourceAmount(int32 NewAmount);
+    void SetCost(int32 NewAmount);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Abstract Functions")
-	void PerformInteraction(AActor* Target);
+public:
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Tower")
+    UTowerDataAsset* TowerData;
+
+protected:
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Abilities")
+    UAbilitySystemComponent* AbilitySystemComponent;
 
 private:
-    // Private variable exposed via getter and setter
-    UPROPERTY(BlueprintGetter = GetResourceAmount, BlueprintSetter = SetResourceAmount)
-    int32 ResourceAmount;
+    UPROPERTY(BlueprintGetter = GetCost, BlueprintSetter = SetCost)
+    int32 Cost;
 
 };

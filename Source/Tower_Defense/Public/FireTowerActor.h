@@ -4,16 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "TowerActor.h"
+
 #include "FireTowerActor.generated.h"
 
-/**
- *
- */
+class UGameplayAbility;
+
 UCLASS()
 class TOWER_DEFENSE_API AFireTowerActor : public ATowerActor
 {
 	GENERATED_BODY()
 
-public:
-	virtual void PerformInteraction_Implementation(AActor* Target);
+protected:
+	virtual void BeginPlay();
+
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	TSubclassOf<UGameplayAbility> FireballAbility;
 };

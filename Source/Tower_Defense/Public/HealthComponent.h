@@ -29,7 +29,7 @@ public:
 	UFUNCTION(BlueprintGetter)
 	int32 GetMaxHealth() const;
 
-	UFUNCTION(BlueprintSetter)
+	UFUNCTION(BlueprintCallable, Category = "Health")
 	void SetMaxHealth(int32 NewAmount);
 
 	UFUNCTION(BlueprintCallable, Category = "Health")
@@ -46,7 +46,6 @@ public:
 	FOnHealthUpdate OnHealthUpdate;
 
 private:
-	UPROPERTY(BlueprintGetter = GetHealth, BlueprintSetter = SetHealth)
 	int Health = 10;
 
 	int MaxHealth = 10;

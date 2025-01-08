@@ -18,6 +18,9 @@ class ATower_DefenseGameMode : public AGameModeBase
 public:
 	ATower_DefenseGameMode();
 
+public:
+	UTowerResourceManager* GetResourceManager();
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -38,6 +41,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int InitialResourcesAmount = 10;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TWeakObjectPtr<UTowerResourceManager> ResourceManager;
 
 	FTimerHandle SpawnTimerHandle;

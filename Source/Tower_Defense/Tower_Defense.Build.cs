@@ -20,6 +20,7 @@ public class Tower_Defense : ModuleRules
             "HeadMountedDisplay",
             "InputCore",
             "NavigationSystem",
+            "Niagara"
         });
     }
 }

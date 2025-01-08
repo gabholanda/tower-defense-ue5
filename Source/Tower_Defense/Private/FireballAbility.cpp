@@ -2,7 +2,6 @@
 #include "FireballAbility.h"
 #include "GameFramework/Actor.h"
 #include "AbilitySystemComponent.h"
-#include "Tower_DefenseCharacter.h"
 
 UFireballAbility::UFireballAbility()
 {
@@ -17,21 +16,16 @@ void UFireballAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, 
 		return;
 	}
 
-	ATower_DefenseCharacter* Character = Cast<ATower_DefenseCharacter>(ActorInfo->OwnerActor);
-	if (Character && FireballClass)
+	AActor* OwningActor = ActorInfo->OwnerActor.Get();
+	if (OwningActor && FireballClass)
 	{
 		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = Character;
+		SpawnParams.Owner = OwningActor;
 
-		FVector SpawnLocation = Character->GetActorLocation() + Character->GetActorForwardVector() * 200.0f;
-		FRotator SpawnRotation = Character->GetActorRotation();
+		FVector SpawnLocation = OwningActor->GetActorLocation() + OwningActor->GetActorForwardVector() * 200.0f;
+		FRotator SpawnRotation = OwningActor->GetActorRotation();
 
 		AActor* Fireball = GetWorld()->SpawnActor<AActor>(FireballClass, SpawnLocation, SpawnRotation, SpawnParams);
-	}
-
-	if (FireballMontage && Character)
-	{
-		Character->PlayAnimMontage(FireballMontage);
 	}
 
 	// End the ability

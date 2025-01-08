@@ -2,10 +2,11 @@
 
 #pragma once
 
+#include "AbilitySystemInterface.h"
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
-#include "AbilitySystemInterface.h"
+
 #include "Tower_DefenseCharacter.generated.h"
 
 class UInputComponent;
@@ -17,6 +18,10 @@ class USoundBase;
 class UAbilitySystemComponent;
 class UGameplayAbility;
 class UFireballAbility;
+class AFireTowerActor;
+class ALightningTower;
+class UTowerPlaceableComponent;
+class UTowerDataAsset;
 
 UCLASS(config = Game)
 class TOWER_DEFENSE_API ATower_DefenseCharacter : public ACharacter, public IAbilitySystemInterface
@@ -59,13 +64,36 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
 
-	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* FireballAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* LightningStrikeAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* PickFireTowerAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* PickLightningTowerAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* BuildPickedTowerAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* CancelTowerPickAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Material)
+	class UMaterial* AllowPlacementMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Material)
+	class UMaterial* BlockPlacementMaterial;
 
 	/** Bool for AnimBP to switch to another animation set */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
 	bool bHasRifle;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float TraceDistance = 500;
 
 	/** Setter to set the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
@@ -81,8 +109,13 @@ protected:
 
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
+	void PickFireTower(const FInputActionValue& Value);
+	void PickLightningTower(const FInputActionValue& Value);
+	void CancelTowerPick(const FInputActionValue& Value);
+	void BuildPickedTower(const FInputActionValue& Value);
 
 	void HandleFireballInput(const FInputActionValue& Value);
+	void HandleLightningStrikeInput(const FInputActionValue& Value);
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
@@ -100,5 +133,24 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
 	TSubclassOf<UGameplayAbility> FireballAbility;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Abilities")
+	TSubclassOf<UGameplayAbility> LightningStrikeAbility;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	TSubclassOf<AFireTowerActor> FireTower;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	UTowerDataAsset* FireTowerData = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	TSubclassOf<ALightningTower> LightningTower;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Abilities")
+	UTowerDataAsset* LightningTowerData = nullptr;
+private:
+	UClass* PickedTowerClass = nullptr;
+	UTowerPlaceableComponent* PlaceableComponent = nullptr;
+	int TowerCost = 0;
 };
 

@@ -15,7 +15,9 @@ class TOWER_DEFENSE_API UTowerResourceManager : public UObject
 public:
     void Initialize(int32 StartingResources);
     bool SpendResources(int32 Amount);
+    UFUNCTION(BlueprintCallable, Category=Resource)
     void AddResources(int32 Amount);
+    UFUNCTION(BlueprintCallable, Category=Resource)
     int32 GetResources() const;
 
 private:

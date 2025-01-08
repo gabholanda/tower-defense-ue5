@@ -2,17 +2,20 @@
 
 
 #include "LightingStrikeAbility.h"
-#include "GameFramework/Actor.h"
-#include "AbilitySystemComponent.h"
-#include "Tower_DefenseCharacter.h"
-#include "Camera/CameraComponent.h"
 
-ULightingStrikeAbility::ULightingStrikeAbility()
+#include "AbilitySystemComponent.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/Actor.h"
+#include "HealthComponent.h"
+#include "Tower_DefenseCharacter.h"
+#include <Kismet/GameplayStatics.h>
+
+ULightningStrikeAbility::ULightningStrikeAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
-void ULightingStrikeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+void ULightningStrikeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
 {
 	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
 	{
@@ -21,19 +24,16 @@ void ULightingStrikeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 	}
 
 	ATower_DefenseCharacter* Character = Cast<ATower_DefenseCharacter>(ActorInfo->OwnerActor);
-	if (Character && LightningStrikeClass)
+	if (Character && LightningEffect)
 	{
 		FActorSpawnParameters SpawnParams;
 		SpawnParams.Owner = Character;
 
-		FVector SpawnLocation = Character->GetActorLocation() + Character->GetActorForwardVector() * 200.0f;
 		if (UCameraComponent* CameraComponent = Character->GetFirstPersonCameraComponent())
 		{
 			FVector CameraLocation = CameraComponent->GetComponentLocation();
 			FRotator CameraRotation = CameraComponent->GetComponentRotation();
 			FVector ForwardDirection = CameraRotation.Vector();
-
-
 
 			FVector RayEnd = CameraLocation + (ForwardDirection * RayDistance);
 
@@ -42,22 +42,26 @@ void ULightingStrikeAbility::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 			FCollisionQueryParams CollisionParams;
 			CollisionParams.AddIgnoredActor(Character);
 
-
 			bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, CameraLocation, RayEnd, ECC_Visibility, CollisionParams);
 
 			if (bHit)
 			{
-				SpawnLocation = HitResult.Location;
+				if (AActor* HitActor = HitResult.GetActor())
+				{
+					if (UHealthComponent* HealthComponent = HitActor->GetComponentByClass<UHealthComponent>())
+					{
+						HealthComponent->ReceiveDamage(Damage);
+						UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+							GetWorld(),
+							LightningEffect,
+							HitResult.ImpactPoint - FVector(0, 0, 300),
+							FRotator::ZeroRotator
+						);
+					}
+				}
 			}
 		}
 		FRotator SpawnRotation = Character->GetActorRotation();
-
-		AActor* LightningStrike = GetWorld()->SpawnActor<AActor>(LightningStrikeClass, SpawnLocation, SpawnRotation, SpawnParams);
-	}
-
-	if (LightningStrikeMontage && Character)
-	{
-		Character->PlayAnimMontage(LightningStrikeMontage);
 	}
 
 	// End the ability

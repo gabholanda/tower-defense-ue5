@@ -1,22 +1,23 @@
 #include "TowerActor.h"
-
+#include "AbilityInputID.h"
+#include "AbilitySystemComponent.h"
 
 ATowerActor::ATowerActor()
 {
-
+	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 }
 
-int32 ATowerActor::GetResourceAmount() const
+UAbilitySystemComponent* ATowerActor::GetAbilitySystemComponent() const
 {
-	return ResourceAmount;
+	return AbilitySystemComponent;
 }
 
-void ATowerActor::SetResourceAmount(int32 NewAmount)
+int32 ATowerActor::GetCost() const
 {
-	ResourceAmount = NewAmount;
+	return Cost;
 }
 
-void ATowerActor::PerformInteraction_Implementation(AActor* Target)
+void ATowerActor::SetCost(int32 NewAmount)
 {
+	Cost = NewAmount;
 }
-
